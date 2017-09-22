@@ -45,10 +45,16 @@ import cifar10
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
+cifar10.NUM_CLASSES = 3 # add
+tf.app.flags.DEFINE_string('train_dir', './cifar10_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 1000000,
+#tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
+#                           """Directory where to write event logs """
+#                           """and checkpoint.""")
+#tf.app.flags.DEFINE_integer('max_steps', 1000000,
+#tf.app.flags.DEFINE_integer('max_steps', 1000,
+tf.app.flags.DEFINE_integer('max_steps', 300,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
@@ -58,8 +64,12 @@ tf.app.flags.DEFINE_integer('log_frequency', 10,
 
 def train():
   """Train CIFAR-10 for a number of steps."""
+  # CIFAR10をあるステップ数学習する
   with tf.Graph().as_default():
-    global_step = tf.contrib.framework.get_or_create_global_step()
+    ## DROPOUT  
+    #global_step = tf.contrib.framework.get_or_create_global_step()
+    global_step = tf.Variable(0, trainable=False)
+    keep_drop_prob = tf.placeholder(tf.float32)
 
     # Get images and labels for CIFAR-10.
     # Force input pipeline to CPU:0 to avoid operations sometimes ending up on
@@ -69,7 +79,9 @@ def train():
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
-    logits = cifar10.inference(images)
+    ## DROPOUT
+    #logits = cifar10.inference(images)
+    logits = cifar10.inference(images, keep_drop_prob=0.5)
 
     # Calculate loss.
     loss = cifar10.loss(logits, labels)
@@ -116,7 +128,7 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
-  cifar10.maybe_download_and_extract()
+  #cifar10.maybe_download_and_extract()
   if tf.gfile.Exists(FLAGS.train_dir):
     tf.gfile.DeleteRecursively(FLAGS.train_dir)
   tf.gfile.MakeDirs(FLAGS.train_dir)

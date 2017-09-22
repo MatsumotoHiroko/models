@@ -63,24 +63,26 @@ NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = cifar10_input.NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
 
 # Constants describing the training process.
-MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average.
-NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays.
-LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor.
-INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
+MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average. # 移動平均に使用する減衰
+NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays. # 学習率が低下した後のエポック数（一つの訓練データセットを何回繰り返して学習させるか）
+LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor. #学習率減衰要因
+INITIAL_LEARNING_RATE = 0.1       # Initial learning rate. # 初期の学習率
 
 # If a model is trained with multiple GPUs, prefix all Op names with tower_name
 # to differentiate the operations. Note that this prefix is removed from the
 # names of the summaries when visualizing a model.
+# 複数のGPUによりモデルが学習される場合、接頭辞のすべてのOp名をtower_nameによりその操作と区別する.
+# モデルの可視化の際に、名前の要約からこの接頭辞が消されることに気づく。
 TOWER_NAME = 'tower'
 
 DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
 
 
 def _activation_summary(x):
-  """Helper to create summaries for activations.
+  """Helper to create summaries for activations. # 活性化のための要約を作るヘルパー
 
-  Creates a summary that provides a histogram of activations.
-  Creates a summary that measures the sparsity of activations.
+  Creates a summary that provides a histogram of activations. # 活性化のヒストグラムを与える漸くを作る
+  Creates a summary that measures the sparsity of activations. # 少数（疎）の活性化の単位の漸くを作る
 
   Args:
     x: Tensor
@@ -89,6 +91,8 @@ def _activation_summary(x):
   """
   # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
   # session. This helps the clarity of presentation on tensorboard.
+  # 複数のGPU学習セッションが必要な場合、その名前から'tower_[0-9]/'を消す。
+  # これはTensorBoardの上でプレゼンテーションを明確に助ける。
   tensor_name = re.sub('%s_[0-9]*/' % TOWER_NAME, '', x.op.name)
   tf.summary.histogram(tensor_name + '/activations', x)
   tf.summary.scalar(tensor_name + '/sparsity',
@@ -97,7 +101,7 @@ def _activation_summary(x):
 
 def _variable_on_cpu(name, shape, initializer):
   """Helper to create a Variable stored on CPU memory.
-
+  # CPUメモリの上にVariableを保存を作ることを助ける
   Args:
     name: name of the variable
     shape: list of ints
@@ -114,9 +118,12 @@ def _variable_on_cpu(name, shape, initializer):
 
 def _variable_with_weight_decay(name, shape, stddev, wd):
   """Helper to create an initialized Variable with weight decay.
-
+  # 重み減衰で初期のVariableを作るヘルパー
   Note that the Variable is initialized with a truncated normal distribution.
   A weight decay is added only if one is specified.
+  # 切断正規分布（truncated normal distribution）により初期化されるVariableに気づく。
+  重み減衰(weight decay)はもし一つ指定される場合のみ追加される。
+
 
   Args:
     name: name of the variable
@@ -141,7 +148,7 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
 
 def distorted_inputs():
   """Construct distorted input for CIFAR training using the Reader ops.
-
+  # Reader ops（？）を使いCIFAR学習のための曲げたインプットを作る
   Returns:
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
@@ -162,7 +169,7 @@ def distorted_inputs():
 
 def inputs(eval_data):
   """Construct input for CIFAR evaluation using the Reader ops.
-
+  Reader opsを使いCIFARの評価のためのインプットを作る
   Args:
     eval_data: bool, indicating if one should use the train or eval data set.
 
@@ -184,10 +191,11 @@ def inputs(eval_data):
     labels = tf.cast(labels, tf.float16)
   return images, labels
 
-
-def inference(images):
+#def inference(images):
+## DROPOUT
+def inference(images, keep_drop_prob=1):
   """Build the CIFAR-10 model.
-
+  CIFAR-10モデルを作る
   Args:
     images: Images returned from distorted_inputs() or inputs().
 
@@ -200,6 +208,11 @@ def inference(images):
   # by replacing all instances of tf.get_variable() with tf.Variable().
   #
   # conv1
+
+  # 複数のGPU学習の起動を経由し変数を共有する目的で、tf.Variable()の代わりにtf.get_variable()を使い、すべての変数をインスタンス化する。
+  # もし単一のGPUの上でこのモデルを動かすのみならば、すべてのインスタンスのtf.get_variable()をtf.Variable()に置き換えるまでこの関数を簡易にする。
+  # conv1 畳み込み層1
+
   with tf.variable_scope('conv1') as scope:
     kernel = _variable_with_weight_decay('weights',
                                          shape=[5, 5, 3, 64],
@@ -211,12 +224,17 @@ def inference(images):
     conv1 = tf.nn.relu(pre_activation, name=scope.name)
     _activation_summary(conv1)
 
-  # pool1
+  # pool1 プーリング層
   pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
                          padding='SAME', name='pool1')
-  # norm1
+  # norm1 いろいろなものの「大きさ」を表す量
   norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
                     name='norm1')
+
+  ## DROPOUT
+  #drop1
+  drop1 = tf.nn.dropout(norm1, keep_drop_prob)
+  _activation_summary(drop1)
 
   # conv2
   with tf.variable_scope('conv2') as scope:
@@ -224,7 +242,9 @@ def inference(images):
                                          shape=[5, 5, 64, 64],
                                          stddev=5e-2,
                                          wd=0.0)
-    conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
+    ## DROPOUT
+    #conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
+    conv = tf.nn.conv2d(drop1, kernel, [1, 1, 1, 1], padding='SAME')
     biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
     pre_activation = tf.nn.bias_add(conv, biases)
     conv2 = tf.nn.relu(pre_activation, name=scope.name)
@@ -240,8 +260,14 @@ def inference(images):
   # local3
   with tf.variable_scope('local3') as scope:
     # Move everything into depth so we can perform a single matrix multiply.
-    reshape = tf.reshape(pool2, [FLAGS.batch_size, -1])
-    dim = reshape.get_shape()[1].value
+    # 全てを深さ？へ移動し、単一の行列の掛け算ができるようにする
+
+    #reshape = tf.reshape(pool2, [FLAGS.batch_size, -1])
+    #dim = reshape.get_shape()[1].value
+    dim = 1
+    for d in pool2.get_shape()[1:].as_list():
+        dim *= d
+        reshape = tf.reshape(pool2, [-1, dim])
     weights = _variable_with_weight_decay('weights', shape=[dim, 384],
                                           stddev=0.04, wd=0.004)
     biases = _variable_on_cpu('biases', [384], tf.constant_initializer(0.1))
@@ -260,6 +286,11 @@ def inference(images):
   # We don't apply softmax here because
   # tf.nn.sparse_softmax_cross_entropy_with_logits accepts the unscaled logits
   # and performs the softmax internally for efficiency.
+
+  # 線形層(WX + b)
+  # ここではソフトマックスを要求しない、なぜなら、tf.nn.sparse_softmax_cross_entropy_with_logitsは
+  # 効率化のために基準化しないロジット（？）を許可し、とソフトマックスを内部で動作する。
+
   with tf.variable_scope('softmax_linear') as scope:
     weights = _variable_with_weight_decay('weights', [192, NUM_CLASSES],
                                           stddev=1/192.0, wd=0.0)
@@ -273,7 +304,7 @@ def inference(images):
 
 def loss(logits, labels):
   """Add L2Loss to all the trainable variables.
-
+  L2損失をすべての学習される変数に対し加える
   Add summary for "Loss" and "Loss/avg".
   Args:
     logits: Logits from inference().
@@ -284,6 +315,7 @@ def loss(logits, labels):
     Loss tensor of type float.
   """
   # Calculate the average cross entropy loss across the batch.
+  # バッチ経由の交差エントロピーの損失の平均を計算する
   labels = tf.cast(labels, tf.int64)
   cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
       labels=labels, logits=logits, name='cross_entropy_per_example')
@@ -292,6 +324,7 @@ def loss(logits, labels):
 
   # The total loss is defined as the cross entropy loss plus all of the weight
   # decay terms (L2 loss).
+  # 損失の合計は交差エントロピーの損失に加え全ての重み減衰の期間(?)（L2損失）で説明される。
   return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
 
