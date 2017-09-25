@@ -330,9 +330,10 @@ def loss(logits, labels):
 
 def _add_loss_summaries(total_loss):
   """Add summaries for losses in CIFAR-10 model.
-
+  # CIFAR-10モデル内の損失のサマリーを追加する
   Generates moving average for all losses and associated summaries for
   visualizing the performance of the network.
+  # ネットワークパフォーマンスの可視化のための全ての損失と関連するサマリーの移動平均を生成する
 
   Args:
     total_loss: Total loss from loss().
@@ -340,15 +341,18 @@ def _add_loss_summaries(total_loss):
     loss_averages_op: op for generating moving averages of losses.
   """
   # Compute the moving average of all individual losses and the total loss.
+  # 全ての個々の損失と合計損失の移動平均を計算する
   loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
   losses = tf.get_collection('losses')
   loss_averages_op = loss_averages.apply(losses + [total_loss])
 
   # Attach a scalar summary to all individual losses and the total loss; do the
   # same for the averaged version of the losses.
+  # スカラー値のサマリーを全ての個々の損失と合計損失に連結し、平均したバージョンの損失と同様にする
   for l in losses + [total_loss]:
     # Name each loss as '(raw)' and name the moving average version of the loss
     # as the original loss name.
+    # 個々の損失を'(raw)'と命名し、損失の移動平均バーションをオリジナルの損失名に命名する
     tf.summary.scalar(l.op.name + ' (raw)', l)
     tf.summary.scalar(l.op.name, loss_averages.average(l))
 
@@ -357,22 +361,25 @@ def _add_loss_summaries(total_loss):
 
 def train(total_loss, global_step):
   """Train CIFAR-10 model.
+  # CIFAR10モデルを学習する
 
   Create an optimizer and apply to all trainable variables. Add moving
   average for all trainable variables.
-
+  # Optimizer(最適化)を作り、全ての学習変数に対して要求する。全ての学習変数のために移動平均を加える。
   Args:
     total_loss: Total loss from loss().
     global_step: Integer Variable counting the number of training steps
-      processed.
+      processed. # 学習ステッププロセスの数値をカウントする数値型変数
   Returns:
     train_op: op for training.
   """
   # Variables that affect learning rate.
+  # 学習率に影響する変数
   num_batches_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN / FLAGS.batch_size
   decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
 
   # Decay the learning rate exponentially based on the number of steps.
+  # ステップ数が基準の学習率の指数関数的な減衰
   lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE,
                                   global_step,
                                   decay_steps,
@@ -381,26 +388,32 @@ def train(total_loss, global_step):
   tf.summary.scalar('learning_rate', lr)
 
   # Generate moving averages of all losses and associated summaries.
+  # 全ての損失と関連するサマリーの移動平均を生成する
   loss_averages_op = _add_loss_summaries(total_loss)
 
   # Compute gradients.
+  # 傾きを計算する
   with tf.control_dependencies([loss_averages_op]):
     opt = tf.train.GradientDescentOptimizer(lr)
     grads = opt.compute_gradients(total_loss)
 
   # Apply gradients.
+  # 傾きを要求する
   apply_gradient_op = opt.apply_gradients(grads, global_step=global_step)
 
   # Add histograms for trainable variables.
+  # 学習変数のヒストグラムを追加する
   for var in tf.trainable_variables():
     tf.summary.histogram(var.op.name, var)
 
   # Add histograms for gradients.
+  # 傾きのヒストグラムを追加する
   for grad, var in grads:
     if grad is not None:
       tf.summary.histogram(var.op.name + '/gradients', grad)
 
   # Track the moving averages of all trainable variables.
+  # 全ての学習変数の移動平均を監視する
   variable_averages = tf.train.ExponentialMovingAverage(
       MOVING_AVERAGE_DECAY, global_step)
   variables_averages_op = variable_averages.apply(tf.trainable_variables())
@@ -413,6 +426,7 @@ def train(total_loss, global_step):
 
 def maybe_download_and_extract():
   """Download and extract the tarball from Alex's website."""
+  #  Alexのウェブサイトからtarballをダウンロードし削除する
   dest_directory = FLAGS.data_dir
   if not os.path.exists(dest_directory):
     os.makedirs(dest_directory)
