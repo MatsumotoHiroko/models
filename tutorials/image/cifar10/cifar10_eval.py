@@ -61,7 +61,7 @@ tf.app.flags.DEFINE_boolean('run_once', False,
 
 def eval_once(saver, summary_writer, top_k_op, summary_op):
   """Run Eval once.
-
+  １回評価を実施する
   Args:
     saver: Saver.
     summary_writer: Summary writer.
@@ -72,6 +72,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
     ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path:
       # Restores from checkpoint
+      # チェックポイントファイル（変数を保存するファイル？）から復元する
       saver.restore(sess, ckpt.model_checkpoint_path)
       # Assuming model_checkpoint_path looks something like:
       #   /my-favorite-path/cifar10_train/model.ckpt-0,
@@ -82,6 +83,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
       return
 
     # Start the queue runners.
+    # キューの起動？を開始する
     coord = tf.train.Coordinator()
     try:
       threads = []
@@ -90,7 +92,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
                                          start=True))
 
       num_iter = int(math.ceil(FLAGS.num_examples / FLAGS.batch_size))
-      true_count = 0  # Counts the number of correct predictions.
+      true_count = 0  # Counts the number of correct predictions. # 正しい予測の数字をカウントする
       total_sample_count = num_iter * FLAGS.batch_size
       step = 0
       while step < num_iter and not coord.should_stop():
@@ -99,6 +101,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
         step += 1
 
       # Compute precision @ 1.
+      # 予測を計算する
       precision = true_count / total_sample_count
       print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
 
@@ -115,25 +118,31 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
 
 def evaluate():
   """Eval CIFAR-10 for a number of steps."""
+  # ステップ番号ぶん、CIFAR-10を評価する
   with tf.Graph().as_default() as g:
     # Get images and labels for CIFAR-10.
+    # CIFAR-10のための画像とラベルを取得
     eval_data = FLAGS.eval_data == 'test'
     images, labels = cifar10.inputs(eval_data=eval_data)
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
+    # 推論モデルからロジットの予測を計算したグラフを作る
     logits = cifar10.inference(images)
 
     # Calculate predictions.
+    # 予測を計算する
     top_k_op = tf.nn.in_top_k(logits, labels, 1)
 
     # Restore the moving average version of the learned variables for eval.
+    # evalのために学習した変数の移動平均のバージョンを復元する
     variable_averages = tf.train.ExponentialMovingAverage(
         cifar10.MOVING_AVERAGE_DECAY)
     variables_to_restore = variable_averages.variables_to_restore()
     saver = tf.train.Saver(variables_to_restore)
 
     # Build the summary operation based on the TF collection of Summaries.
+    # TensorFlowのサマリーの収集を基準にサマリーの操作を作る
     summary_op = tf.summary.merge_all()
 
     summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)

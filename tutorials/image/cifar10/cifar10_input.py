@@ -27,9 +27,12 @@ import tensorflow as tf
 # Process images of this size. Note that this differs from the original CIFAR
 # image size of 32 x 32. If one alters this number, then the entire model
 # architecture will change and any model would need to be retrained.
+# このサイズの画像を処理する。オリジナルCIFAR画像サイズの32x32との違いに気づく。
+# もし、この数字を変更したら、すべてのモデルの構成が変更され、再学習される必要がある。
 IMAGE_SIZE = 24
 
 # Global constants describing the CIFAR-10 data set.
+# CIFAR-10データセットのグローバル定数の説明
 NUM_CLASSES = 10
 NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 50000
 NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 10000
@@ -37,11 +40,12 @@ NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 10000
 
 def read_cifar10(filename_queue):
   """Reads and parses examples from CIFAR10 data files.
-
+  CIFAR10データファイルからサンプルを読み、解析する
   Recommendation: if you want N-way read parallelism, call this function
   N times.  This will give you N independent Readers reading different
   files & positions within those files, which will give better mixing of
   examples.
+  推薦： N方向の並列処理を読むのを望む場合、この関数をN回呼ぶ。これはNの独立したリーダーが他のファイルとポジションを読むことをそれらのファイルの中で与え、よりサンプルを混合し与える。
 
   Args:
     filename_queue: A queue of strings with the filenames to read from.
@@ -64,6 +68,8 @@ def read_cifar10(filename_queue):
   # Dimensions of the images in the CIFAR-10 dataset.
   # See http://www.cs.toronto.edu/~kriz/cifar.html for a description of the
   # input format.
+  # CIFAR-10データセットの画像の次元。
+  # 挿入フォーマットの説明はhttp://www.cs.toronto.edu/~kriz/cifar.htmlを見る
   label_bytes = 1  # 2 for CIFAR-100
   result.height = 32
   result.width = 32
@@ -71,28 +77,34 @@ def read_cifar10(filename_queue):
   image_bytes = result.height * result.width * result.depth
   # Every record consists of a label followed by the image, with a
   # fixed number of bytes for each.
+  # すべてのレコードは画像によってラベルから作られ、それぞれにバイト数字が固定される
   record_bytes = label_bytes + image_bytes
 
   # Read a record, getting filenames from the filename_queue.  No
   # header or footer in the CIFAR-10 format, so we leave header_bytes
   # and footer_bytes at their default of 0.
+  # レコードを読む、filename_queueからファイル名を取得する。CIFAR-10フォーマットにヘッダーとフッターがない、それはheader_bytesとfooter_bytesのデフォルトを0に取り除く。
   reader = tf.FixedLengthRecordReader(record_bytes=record_bytes)
   result.key, value = reader.read(filename_queue)
 
   # Convert from a string to a vector of uint8 that is record_bytes long.
+  # 文字列から符号なし整数8 ビット整数行列のrecord_bytesの長さに変換する。
   record_bytes = tf.decode_raw(value, tf.uint8)
 
   # The first bytes represent the label, which we convert from uint8->int32.
+  # 最初のバイトはラベルを説明し、uint8からint32へ変換する。
   result.label = tf.cast(
       tf.strided_slice(record_bytes, [0], [label_bytes]), tf.int32)
 
   # The remaining bytes after the label represent the image, which we reshape
   # from [depth * height * width] to [depth, height, width].
+  # ラベルが画像を説明した後の残りのバイト、[深さ * 高さ * 幅]から[深さ, 高さ, 幅]へ再成形
   depth_major = tf.reshape(
       tf.strided_slice(record_bytes, [label_bytes],
                        [label_bytes + image_bytes]),
       [result.depth, result.height, result.width])
   # Convert from [depth, height, width] to [height, width, depth].
+  # [深さ, 高さ, 幅]から[高さ, 幅, 深さ]へ変換
   result.uint8image = tf.transpose(depth_major, [1, 2, 0])
 
   return result
@@ -101,7 +113,7 @@ def read_cifar10(filename_queue):
 def _generate_image_and_label_batch(image, label, min_queue_examples,
                                     batch_size, shuffle):
   """Construct a queued batch of images and labels.
-
+  画像とラベルのバッチのキューを作る
   Args:
     image: 3-D Tensor of [height, width, 3] of type.float32.
     label: 1-D Tensor of type.int32
@@ -116,6 +128,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
   """
   # Create a queue that shuffles the examples, and then
   # read 'batch_size' images + labels from the example queue.
+  # サンプルをシャッフルした後に'batch_size'画像+ラベルをサンプルのキューから読んだキューを作る
   num_preprocess_threads = 16
   if shuffle:
     images, label_batch = tf.train.shuffle_batch(
@@ -132,6 +145,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
         capacity=min_queue_examples + 3 * batch_size)
 
   # Display the training images in the visualizer.
+  # 可視化ツールの中の学習画像を表示する
   tf.summary.image('images', images)
 
   return images, tf.reshape(label_batch, [batch_size])
@@ -139,7 +153,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
 
 def distorted_inputs(data_dir, batch_size):
   """Construct distorted input for CIFAR training using the Reader ops.
-
+  opのリーダーを使ったCIFARの学習のために歪んだ挿入？を作る
   Args:
     data_dir: Path to the CIFAR-10 data directory.
     batch_size: Number of images per batch.
@@ -155,9 +169,11 @@ def distorted_inputs(data_dir, batch_size):
       raise ValueError('Failed to find file: ' + f)
 
   # Create a queue that produces the filenames to read.
+  # 読み込みのファイル名を与えキューを作る
   filename_queue = tf.train.string_input_producer(filenames)
 
   # Read examples from files in the filename queue.
+  # ファイル名のキューの中にファイルからサンプルを読む
   read_input = read_cifar10(filename_queue)
   reshaped_image = tf.cast(read_input.uint8image, tf.float32)
 
@@ -166,30 +182,37 @@ def distorted_inputs(data_dir, batch_size):
 
   # Image processing for training the network. Note the many random
   # distortions applied to the image.
+  # ネットワークの学習のための画像の処理。たくさんのランダムの歪みを画像に対し要求することを認める
 
   # Randomly crop a [height, width] section of the image.
+  # 画像を[高さ, 幅]にランダムに切り抜く
   distorted_image = tf.random_crop(reshaped_image, [height, width, 3])
 
   # Randomly flip the image horizontally.
+  # 画像を水平にランダムに回転させる
   distorted_image = tf.image.random_flip_left_right(distorted_image)
 
   # Because these operations are not commutative, consider randomizing
   # the order their operation.
   # NOTE: since per_image_standardization zeros the mean and makes
   # the stddev unit, this likely has no effect see tensorflow#1458.
+  # これらの操作は同じ結果にならない、これらの操作の命令はランダムに作られるよう考えられる。
   distorted_image = tf.image.random_brightness(distorted_image,
                                                max_delta=63)
   distorted_image = tf.image.random_contrast(distorted_image,
                                              lower=0.2, upper=1.8)
 
   # Subtract off the mean and divide by the variance of the pixels.
+  # 平均が引かれ、ピクセルの分散により分配される
   float_image = tf.image.per_image_standardization(distorted_image)
 
   # Set the shapes of tensors.
+  # テンソルの形が設定される
   float_image.set_shape([height, width, 3])
   read_input.label.set_shape([1])
 
   # Ensure that the random shuffling has good mixing properties.
+  # ランダムシャッフルが良い混合の属性を持つようにする
   # min_fraction_of_examples_in_queue = 0.4
   min_fraction_of_examples_in_queue = 0.1
   min_queue_examples = int(NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN *
@@ -198,6 +221,7 @@ def distorted_inputs(data_dir, batch_size):
          'This will take a few minutes.' % min_queue_examples)
 
   # Generate a batch of images and labels by building up a queue of examples.
+  # 画像のバッチとラベルをサンプルのキューで増やす？ことにより生成する
   return _generate_image_and_label_batch(float_image, read_input.label,
                                          min_queue_examples, batch_size,
                                          shuffle=True)
@@ -205,7 +229,7 @@ def distorted_inputs(data_dir, batch_size):
 
 def inputs(eval_data, data_dir, batch_size):
   """Construct input for CIFAR evaluation using the Reader ops.
-
+  リーダーのopによりCIFARの評価のための挿入を作る
   Args:
     eval_data: bool, indicating if one should use the train or eval data set.
     data_dir: Path to the CIFAR-10 data directory.
@@ -228,9 +252,11 @@ def inputs(eval_data, data_dir, batch_size):
       raise ValueError('Failed to find file: ' + f)
 
   # Create a queue that produces the filenames to read.
+  # 読み込みのファイル名を与えたキューを作る
   filename_queue = tf.train.string_input_producer(filenames)
 
   # Read examples from files in the filename queue.
+  # ファイル名のキューの中のファイルからサンプルを読む
   read_input = read_cifar10(filename_queue)
   reshaped_image = tf.cast(read_input.uint8image, tf.float32)
 
@@ -239,22 +265,27 @@ def inputs(eval_data, data_dir, batch_size):
 
   # Image processing for evaluation.
   # Crop the central [height, width] of the image.
+  # 評価のための画像を処理する
   resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
                                                          height, width)
 
   # Subtract off the mean and divide by the variance of the pixels.
+  #  平均が引かれ、ピクセルの分散により分配される
   float_image = tf.image.per_image_standardization(resized_image)
 
   # Set the shapes of tensors.
+  # テンソルの形に設定する
   float_image.set_shape([height, width, 3])
   read_input.label.set_shape([1])
 
   # Ensure that the random shuffling has good mixing properties.
+  # ランダムシャッフルが良い混合の属性を持つようにする
   min_fraction_of_examples_in_queue = 0.4
   min_queue_examples = int(num_examples_per_epoch *
                            min_fraction_of_examples_in_queue)
 
   # Generate a batch of images and labels by building up a queue of examples.
+  # 画像のバッチとラベルをサンプルのキューで増やす？ことにより生成する
   return _generate_image_and_label_batch(float_image, read_input.label,
                                          min_queue_examples, batch_size,
                                          shuffle=False)
