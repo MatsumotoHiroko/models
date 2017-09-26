@@ -74,32 +74,37 @@ def train():
     # Get images and labels for CIFAR-10.
     # Force input pipeline to CPU:0 to avoid operations sometimes ending up on
     # GPU and resulting in a slow down.
+    # CIFAR-10の画像とラベルを取得。
+    # CPU:0に対し時々最後にGPU上で低速になる操作を回避する命令パイプラインを強制挿入
     with tf.device('/cpu:0'):
       images, labels = cifar10.distorted_inputs()
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
+    # 推論モデル（inference model）からロジットの予測を計算するグラフを作る
     ## DROPOUT
     #logits = cifar10.inference(images)
     logits = cifar10.inference(images, keep_drop_prob=0.5)
 
     # Calculate loss.
+    # 損失を計算
     loss = cifar10.loss(logits, labels)
 
     # Build a Graph that trains the model with one batch of examples and
     # updates the model parameters.
+    # 一つのバッチのサンプルとモデルのパラメータの更新によりモデルを学習するグラフを作る
     train_op = cifar10.train(loss, global_step)
 
     class _LoggerHook(tf.train.SessionRunHook):
       """Logs loss and runtime."""
-
+      # 損失と実行時間を記録する
       def begin(self):
         self._step = -1
         self._start_time = time.time()
 
       def before_run(self, run_context):
         self._step += 1
-        return tf.train.SessionRunArgs(loss)  # Asks for loss value.
+        return tf.train.SessionRunArgs(loss)  # Asks for loss value. # 損失値を問う
 
       def after_run(self, run_context, run_values):
         if self._step % FLAGS.log_frequency == 0:
