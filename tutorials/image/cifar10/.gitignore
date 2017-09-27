@@ -1,2 +1,4 @@
 /dataset
 *.csv
+/cifar10_train
+/data
