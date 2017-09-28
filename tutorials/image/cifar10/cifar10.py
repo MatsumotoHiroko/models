@@ -191,9 +191,9 @@ def inputs(eval_data):
     labels = tf.cast(labels, tf.float16)
   return images, labels
 
-#def inference(images):
+def inference(images):
 ## DROPOUT
-def inference(images, keep_drop_prob=1):
+#def inference(images, keep_drop_prob=1):
   """Build the CIFAR-10 model.
   CIFAR-10モデルを作る
   Args:
@@ -233,8 +233,8 @@ def inference(images, keep_drop_prob=1):
 
   ## DROPOUT
   #drop1
-  drop1 = tf.nn.dropout(norm1, keep_drop_prob)
-  _activation_summary(drop1)
+  #drop1 = tf.nn.dropout(norm1, keep_drop_prob)
+  #_activation_summary(drop1)
 
   # conv2
   with tf.variable_scope('conv2') as scope:
@@ -243,8 +243,8 @@ def inference(images, keep_drop_prob=1):
                                          stddev=5e-2,
                                          wd=0.0)
     ## DROPOUT
-    #conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
-    conv = tf.nn.conv2d(drop1, kernel, [1, 1, 1, 1], padding='SAME')
+    conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
+    #conv = tf.nn.conv2d(drop1, kernel, [1, 1, 1, 1], padding='SAME')
     biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
     pre_activation = tf.nn.bias_add(conv, biases)
     conv2 = tf.nn.relu(pre_activation, name=scope.name)

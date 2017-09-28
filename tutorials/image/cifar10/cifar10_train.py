@@ -42,10 +42,11 @@ import time
 import tensorflow as tf
 
 import cifar10
+#from tensorflow.models.image.cifar10 import cifar10
 
 FLAGS = tf.app.flags.FLAGS
 
-cifar10.NUM_CLASSES = 3 # add
+cifar10.NUM_CLASSES = 10 # add
 tf.app.flags.DEFINE_string('train_dir', './cifar10_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
@@ -67,8 +68,8 @@ def train():
   # CIFAR10をあるステップ数学習する
   with tf.Graph().as_default():
     ## DROPOUT  
-    #global_step = tf.contrib.framework.get_or_create_global_step()
-    global_step = tf.Variable(0, trainable=False)
+    global_step = tf.contrib.framework.get_or_create_global_step()
+    #global_step = tf.Variable(0, trainable=False)
     keep_drop_prob = tf.placeholder(tf.float32)
 
     # Get images and labels for CIFAR-10.
@@ -83,8 +84,8 @@ def train():
     # inference model.
     # 推論モデル（inference model）からロジットの予測を計算するグラフを作る
     ## DROPOUT
-    #logits = cifar10.inference(images)
-    logits = cifar10.inference(images, keep_drop_prob=0.5)
+    logits = cifar10.inference(images)
+    #logits = cifar10.inference(images, keep_drop_prob=0.5)
 
     # Calculate loss.
     # 損失を計算
