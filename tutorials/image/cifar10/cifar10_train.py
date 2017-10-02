@@ -53,9 +53,8 @@ tf.app.flags.DEFINE_string('train_dir', './cifar10_train',
 #tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
 #                           """Directory where to write event logs """
 #                           """and checkpoint.""")
-#tf.app.flags.DEFINE_integer('max_steps', 1000000,
 #tf.app.flags.DEFINE_integer('max_steps', 1000,
-tf.app.flags.DEFINE_integer('max_steps', 300,
+tf.app.flags.DEFINE_integer('max_steps', 1000000,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
@@ -68,8 +67,8 @@ def train():
   # CIFAR10をあるステップ数学習する
   with tf.Graph().as_default():
     ## DROPOUT  
-    global_step = tf.contrib.framework.get_or_create_global_step()
     #global_step = tf.Variable(0, trainable=False)
+    global_step = tf.contrib.framework.get_or_create_global_step()
     keep_drop_prob = tf.placeholder(tf.float32)
 
     # Get images and labels for CIFAR-10.
@@ -84,8 +83,8 @@ def train():
     # inference model.
     # 推論モデル（inference model）からロジットの予測を計算するグラフを作る
     ## DROPOUT
-    logits = cifar10.inference(images)
     #logits = cifar10.inference(images, keep_drop_prob=0.5)
+    logits = cifar10.inference(images)
 
     # Calculate loss.
     # 損失を計算

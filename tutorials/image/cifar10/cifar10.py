@@ -126,11 +126,12 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
 
 
   Args:
-    name: name of the variable
-    shape: list of ints
-    stddev: standard deviation of a truncated Gaussian
+    name: name of the variable # 変数の名前
+    shape: list of ints # int型のlist(配列)
+    stddev: standard deviation of a truncated Gaussian # 標準偏差（standard deviation）のガウス切断？
     wd: add L2Loss weight decay multiplied by this float. If None, weight
         decay is not added for this Variable.
+    # L2損失の重み減衰をこの少数で掛ける。Noneの場合、重み減衰はこの変数に加えられない
 
   Returns:
     Variable Tensor
@@ -232,7 +233,6 @@ def inference(images):
                     name='norm1')
 
   ## DROPOUT
-  #drop1
   #drop1 = tf.nn.dropout(norm1, keep_drop_prob)
   #_activation_summary(drop1)
 
@@ -243,8 +243,8 @@ def inference(images):
                                          stddev=5e-2,
                                          wd=0.0)
     ## DROPOUT
-    conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
     #conv = tf.nn.conv2d(drop1, kernel, [1, 1, 1, 1], padding='SAME')
+    conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
     biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
     pre_activation = tf.nn.bias_add(conv, biases)
     conv2 = tf.nn.relu(pre_activation, name=scope.name)
@@ -380,10 +380,10 @@ def train(total_loss, global_step):
 
   # Decay the learning rate exponentially based on the number of steps.
   # ステップ数が基準の学習率の指数関数的な減衰
-  lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE,
-                                  global_step,
-                                  decay_steps,
-                                  LEARNING_RATE_DECAY_FACTOR,
+  lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE, # 学習率の初期設定
+                                  global_step,           # いまdatasetのいくつめか
+                                  decay_steps,           # 学習がどの程度進んだら学習量を減衰させるか
+                                  LEARNING_RATE_DECAY_FACTOR, #  減衰させる量
                                   staircase=True)
   tf.summary.scalar('learning_rate', lr)
 
