@@ -48,7 +48,8 @@ import cifar10_input
 FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
-tf.app.flags.DEFINE_integer('batch_size', 128,
+#tf.app.flags.DEFINE_integer('batch_size', 128,
+tf.app.flags.DEFINE_integer('batch_size', 64,
                             """Number of images to process in a batch.""")
 tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data',
                            """Path to the CIFAR-10 data directory.""")
@@ -67,7 +68,6 @@ MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average. # �
 NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays. # 学習率が低下した後のエポック数（一つの訓練データセットを何回繰り返して学習させるか）
 LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor. #学習率減衰要因
 INITIAL_LEARNING_RATE = 0.1       # Initial learning rate. # 初期の学習率
-
 # If a model is trained with multiple GPUs, prefix all Op names with tower_name
 # to differentiate the operations. Note that this prefix is removed from the
 # names of the summaries when visualizing a model.
@@ -227,6 +227,7 @@ def inference(images):
 
   # pool1 プーリング層
   pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
+  #pool1 = tf.nn.max_pool(conv1, ksize=[1, 6, 6, 1], strides=[1, 2, 2, 1],
                          padding='SAME', name='pool1')
   # norm1 いろいろなものの「大きさ」を表す量
   norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
@@ -255,6 +256,7 @@ def inference(images):
                     name='norm2')
   # pool2
   pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1],
+  #pool2 = tf.nn.max_pool(norm2, ksize=[1, 6, 6, 1],
                          strides=[1, 2, 2, 1], padding='SAME', name='pool2')
 
   # local3
@@ -395,6 +397,7 @@ def train(total_loss, global_step):
   # 傾きを計算する
   with tf.control_dependencies([loss_averages_op]):
     opt = tf.train.GradientDescentOptimizer(lr)
+    #opt = tf.train.AdadeltaOptimizer(lr)
     grads = opt.compute_gradients(total_loss)
 
   # Apply gradients.

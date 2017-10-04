@@ -3,3 +3,4 @@
 /cifar10_train
 /cifar10_eval
 /data
+*.swp

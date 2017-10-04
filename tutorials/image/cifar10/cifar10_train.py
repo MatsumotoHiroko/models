@@ -46,15 +46,15 @@ import cifar10
 
 FLAGS = tf.app.flags.FLAGS
 
-cifar10.NUM_CLASSES = 10 # add
+cifar10.NUM_CLASSES = 3 #10 # add
 tf.app.flags.DEFINE_string('train_dir', './cifar10_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
 #tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
 #                           """Directory where to write event logs """
 #                           """and checkpoint.""")
-#tf.app.flags.DEFINE_integer('max_steps', 1000,
-tf.app.flags.DEFINE_integer('max_steps', 1000000,
+tf.app.flags.DEFINE_integer('max_steps', 35000,
+#tf.app.flags.DEFINE_integer('max_steps', 1000000,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")

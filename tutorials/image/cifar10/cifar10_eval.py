@@ -45,7 +45,7 @@ import cifar10
 
 FLAGS = tf.app.flags.FLAGS
 
-cifar10.NUM_CLASSES = 10 # add
+cifar10.NUM_CLASSES = 3 #10 # add
 
 tf.app.flags.DEFINE_string('eval_dir', './cifar10_eval',
                            """Directory where to write event logs.""")
@@ -61,7 +61,8 @@ tf.app.flags.DEFINE_boolean('run_once', False,
                          """Whether to run eval only once.""")
 
 
-def eval_once(saver, summary_writer, top_k_op, summary_op):
+#def eval_once(saver, summary_writer, top_k_op, summary_op):
+def eval_once(saver, summary_writer, top_k_op, summary_op, labels, top_1_op): # test
   """Run Eval once.
   １回評価を実施する
   Args:
@@ -97,16 +98,31 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
       true_count = 0  # Counts the number of correct predictions. # 正しい予測の数字をカウントする
       total_sample_count = num_iter * FLAGS.batch_size
       step = 0
+      predictions_1_op = [0 for i in range(cifar10.NUM_CLASSES)] # test
+      inputs_1_op = [0 for i in range(cifar10.NUM_CLASSES)] # test
       while step < num_iter and not coord.should_stop():
         predictions = sess.run([top_k_op])
         true_count += np.sum(predictions)
         step += 1
-
+        prediction, label = sess.run([top_1_op, labels]) # test
+        #print(prediction) # test
+        #print(label) # test
+        # class part prediction count
+        label_step = 0
+        for l in label:
+          inputs_1_op[l] += 1
+          if l in prediction.indices[label_step]:
+            predictions_1_op[l] += 1
+         
+          label_step += 1
       # Compute precision @ 1.
       # 予測を計算する
       precision = true_count / total_sample_count
-      print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
-
+      #print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
+      
+      # part of label prediction
+      for l in range(cifar10.NUM_CLASSES):
+        print('%s: precision[%s] @ 1 = %.3f' % (datetime.now(), l, predictions_1_op[l]/inputs_1_op[l]))
       summary = tf.Summary()
       summary.ParseFromString(sess.run(summary_op))
       summary.value.add(tag='Precision @ 1', simple_value=precision)
@@ -135,6 +151,7 @@ def evaluate():
     # Calculate predictions.
     # 予測を計算する
     top_k_op = tf.nn.in_top_k(logits, labels, 1)
+    top_1_op = tf.nn.top_k(logits, 1) # test
 
     # Restore the moving average version of the learned variables for eval.
     # evalのために学習した変数の移動平均のバージョンを復元する
@@ -150,7 +167,8 @@ def evaluate():
     summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
 
     while True:
-      eval_once(saver, summary_writer, top_k_op, summary_op)
+      #eval_once(saver, summary_writer, top_k_op, summary_op)
+      eval_once(saver, summary_writer, top_k_op, summary_op, labels, top_1_op) # test
       if FLAGS.run_once:
         break
       time.sleep(FLAGS.eval_interval_secs)
