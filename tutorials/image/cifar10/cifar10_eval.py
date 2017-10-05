@@ -122,8 +122,9 @@ def eval_once(saver, summary_writer, top_k_op, summary_op, labels, top_1_op): # 
       #print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
       
       # part of label prediction
+      names = sorted(config.label_names)
       for l in range(cifar10.NUM_CLASSES):
-        print('%s: precision[%s] @ 1 = %.3f' % (datetime.now(), l, predictions_1_op[l]/inputs_1_op[l]))
+        print('%s: precision[%s:%s] @ 1 = %.3f' % (datetime.now(), l, names[l], predictions_1_op[l]/inputs_1_op[l]))
       summary = tf.Summary()
       summary.ParseFromString(sess.run(summary_op))
       summary.value.add(tag='Precision @ 1', simple_value=precision)
