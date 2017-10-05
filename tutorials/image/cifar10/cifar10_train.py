@@ -42,11 +42,13 @@ import time
 import tensorflow as tf
 
 import cifar10
+
+import config
 #from tensorflow.models.image.cifar10 import cifar10
 
 FLAGS = tf.app.flags.FLAGS
 
-cifar10.NUM_CLASSES = 3 #10 # add
+cifar10.NUM_CLASSES = config.NUM_CLASSES # add
 tf.app.flags.DEFINE_string('train_dir', './cifar10_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")

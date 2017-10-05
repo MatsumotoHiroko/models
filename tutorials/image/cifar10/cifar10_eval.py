@@ -42,10 +42,11 @@ import numpy as np
 import tensorflow as tf
 
 import cifar10
+import config
 
 FLAGS = tf.app.flags.FLAGS
 
-cifar10.NUM_CLASSES = 3 #10 # add
+cifar10.NUM_CLASSES = config.NUM_CLASSES
 
 tf.app.flags.DEFINE_string('eval_dir', './cifar10_eval',
                            """Directory where to write event logs.""")
