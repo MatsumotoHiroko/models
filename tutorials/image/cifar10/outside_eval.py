@@ -15,8 +15,10 @@ tf.app.flags.DEFINE_string('checkpoint_dir', './cifar10_train',
 def evaluate(filename):
   # filename:画像ファイルのパス
   with tf.Graph().as_default() as g:
-    jpg = tf.read_file(filename)
-    image = tf.image.decode_jpeg(jpg, channels = 3)
+    #jpg = tf.read_file(filename)
+    png = tf.read_file(filename) 
+    #image = tf.image.decode_jpeg(jpg, channels = 3)
+    image = tf.image.decode_png(png, channels = 3)
     image = tf.image.resize_images(image, [32,32]) 
     image = tf.image.resize_image_with_crop_or_pad(image, 24, 24) # cifar10は内部処理で32×32を24×24に切り出して利用している
     logits = cifar10.inference([image])
