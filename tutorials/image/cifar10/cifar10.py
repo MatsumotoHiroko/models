@@ -72,7 +72,7 @@ INITIAL_LEARNING_RATE = 0.1       # Initial learning rate. # 初期の学習率
 # to differentiate the operations. Note that this prefix is removed from the
 # names of the summaries when visualizing a model.
 # 複数のGPUによりモデルが学習される場合、接頭辞のすべてのOp名をtower_nameによりその操作と区別する.
-# モデルの可視化の際に、名前の要約からこの接頭辞が消されることに気づく。
+# モデルの可視化の際に、名前のサマリーからこの接頭辞が消されることに気づく。
 TOWER_NAME = 'tower'
 
 DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
@@ -81,8 +81,8 @@ DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
 def _activation_summary(x):
   """Helper to create summaries for activations. # 活性化のための要約を作るヘルパー
 
-  Creates a summary that provides a histogram of activations. # 活性化のヒストグラムを与える漸くを作る
-  Creates a summary that measures the sparsity of activations. # 少数（疎）の活性化の単位の漸くを作る
+  Creates a summary that provides a histogram of activations. # 活性化のヒストグラムを与えるサマリーを作る
+  Creates a summary that measures the sparsity of activations. # 少数（疎）の活性化の単位のサマリーを作る
 
   Args:
     x: Tensor
