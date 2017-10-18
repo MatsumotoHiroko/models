@@ -18,7 +18,13 @@ import zipfile
 
 from collections import defaultdict
 from io import StringIO
-from matplotlib import pyplot as plt
+
+os.environ['QT_QPA_PLATFORM']='offscreen' # add
+#from matplotlib import pyplot as plt
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 from PIL import Image
 
 
@@ -27,7 +33,7 @@ from PIL import Image
 # In[8]:
 
 # This is needed to display the images.
-get_ipython().magic('matplotlib inline')
+#get_ipython().magic('matplotlib inline')
 
 # This is needed since the notebook is stored in the object_detection folder.
 sys.path.append("..")
@@ -41,7 +47,6 @@ sys.path.append("..")
 from utils import label_map_util
 
 from utils import visualization_utils as vis_util
-
 
 # # Model preparation 
 
@@ -123,10 +128,14 @@ def load_image_into_numpy_array(image):
 # If you want to test the code with your images, just add path to the images to the TEST_IMAGE_PATHS.
 PATH_TO_TEST_IMAGES_DIR = 'test_images'
 TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
-
+PATH_TO_OUTPUT_IMAGES_DIR = 'output_images'
+OUTPUT_IMAGE_PATHS = [ os.path.join(PATH_TO_OUTPUT_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
 # Size, in inches, of the output images.
 IMAGE_SIZE = (12, 8)
+exts = ['.JPG','.JPEG', '.PNG']
 
+if not os.path.isdir(PATH_TO_OUTPUT_IMAGES_DIR):
+  os.makedirs(PATH_TO_OUTPUT_IMAGES_DIR)
 
 # In[ ]:
 
@@ -141,31 +150,39 @@ with detection_graph.as_default():
     detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
     detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
     num_detections = detection_graph.get_tensor_by_name('num_detections:0')
-    for image_path in TEST_IMAGE_PATHS:
-      image = Image.open(image_path)
-      # the array based representation of the image will be used later in order to prepare the
-      # result image with boxes and labels on it.
-      image_np = load_image_into_numpy_array(image)
-      # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-      image_np_expanded = np.expand_dims(image_np, axis=0)
-      # Actual detection.
-      (boxes, scores, classes, num) = sess.run(
-          [detection_boxes, detection_scores, detection_classes, num_detections],
-          feed_dict={image_tensor: image_np_expanded})
-      # Visualization of the results of a detection.
-      vis_util.visualize_boxes_and_labels_on_image_array(
-          image_np,
-          np.squeeze(boxes),
-          np.squeeze(classes).astype(np.int32),
-          np.squeeze(scores),
-          category_index,
-          use_normalized_coordinates=True,
-          line_thickness=8)
-      plt.figure(figsize=IMAGE_SIZE)
-      plt.imshow(image_np)
+    #for image_path in TEST_IMAGE_PATHS:
+    for dirpath, dirnames, filenames in os.walk(PATH_TO_TEST_IMAGES_DIR):
+      for filename in filenames:
+        (fn,ext) = os.path.splitext(filename)
+        if ext.upper() not in exts:        
+          continue
+        image_path = os.path.join(dirpath, filename)
+        print(image_path)
+        image = Image.open(image_path)
+        # the array based representation of the image will be used later in order to prepare the
+        # result image with boxes and labels on it.
+        image_np = load_image_into_numpy_array(image)
+        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+        image_np_expanded = np.expand_dims(image_np, axis=0)
+        # Actual detection.
+        (boxes, scores, classes, num) = sess.run(
+            [detection_boxes, detection_scores, detection_classes, num_detections],
+            feed_dict={image_tensor: image_np_expanded})
+        # Visualization of the results of a detection.
+        vis_util.visualize_boxes_and_labels_on_image_array(
+            image_np,
+            np.squeeze(boxes),
+            np.squeeze(classes).astype(np.int32),
+            np.squeeze(scores),
+            category_index,
+            use_normalized_coordinates=True,
+            line_thickness=8)
+        #plt.figure(figsize=IMAGE_SIZE)
+        #plt.imshow(image_np)
+        output_image_path = os.path.join(PATH_TO_OUTPUT_IMAGES_DIR, filename)
+        print(output_image_path)
+        plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
+        plt.imshow(image_np)
+        plt.savefig(output_image_path) # ここを追加
 
-
-# In[ ]:
-
-
-
+# In[   ]:

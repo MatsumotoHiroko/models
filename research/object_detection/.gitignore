@@ -1,2 +1,4 @@
 /protos
 ssd_mobilenet_*
+ssd_inception*
+/output_images

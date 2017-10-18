@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from collections import defaultdict
 from io import StringIO
+os.environ['QT_QPA_PLATFORM']='offscreen'
 from matplotlib import pyplot as plt
 from PIL import Image
 
@@ -15,7 +16,7 @@ from utils import visualization_utils as vis_util
 
 
 # モデルの読み込み
-etection_graph = tf.Graph()
+detection_graph = tf.Graph()
 with detection_graph.as_default():
   od_graph_def = tf.GraphDef()
   # モデルの読み込み．使用するモデルのパスを指定
