@@ -44,6 +44,7 @@ import tensorflow as tf
 import cifar10
 
 import config
+import grad_cam
 #from tensorflow.models.image.cifar10 import cifar10
 
 FLAGS = tf.app.flags.FLAGS

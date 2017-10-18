@@ -45,6 +45,8 @@ import tensorflow as tf
 
 import cifar10_input
 
+import grad_cam
+
 FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
@@ -283,6 +285,19 @@ def inference(images):
     biases = _variable_on_cpu('biases', [192], tf.constant_initializer(0.1))
     local4 = tf.nn.relu(tf.matmul(local3, weights) + biases, name=scope.name)
     _activation_summary(local4)
+
+    #############################
+    ### grad-cam definition https://github.com/ysasaki6023/imageCounting/blob/v2.0/gradCam.py
+    iBatch = 0
+    answer = tf.argmax(self.y,axis=1)[iBatch]
+    self.cam_conv1 = self.gradCam(h_conv1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_conv2 = self.gradCam(h_conv2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_conv3 = self.gradCam(h_conv3, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+
+    self.cam_pool1 = self.gradCam(h_pool1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_pool2 = self.gradCam(h_pool2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_pool3 = self.gradCam(h_pool3, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+
 
   # linear layer(WX + b),
   # We don't apply softmax here because
