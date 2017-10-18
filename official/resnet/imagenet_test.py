@@ -34,11 +34,9 @@ class BaseTest(tf.test.TestCase):
   def tensor_shapes_helper(self, resnet_size, with_gpu=False):
     """Checks the tensor shapes after each phase of the ResNet model."""
     def reshape(shape):
-      """Returns the expected dimensions depending on if gpu is being used.
-
-      If a GPU is used for the test, the shape is returned (already in NCHW
-      form). When GPU is not used, the shape is converted to NHWC.
-      """
+      """Returns the expected dimensions depending on if a GPU is being used."""
+      # If a GPU is used for the test, the shape is returned (already in NCHW
+      # form). When GPU is not used, the shape is converted to NHWC.
       if with_gpu:
         return shape
       return shape[0], shape[2], shape[3], shape[1]
@@ -127,10 +125,10 @@ class BaseTest(tf.test.TestCase):
 
   def input_fn(self):
     """Provides random features and labels."""
-    features = tf.random_uniform([FLAGS.train_batch_size, 224, 224, 3])
+    features = tf.random_uniform([FLAGS.batch_size, 224, 224, 3])
     labels = tf.one_hot(
         tf.random_uniform(
-            [FLAGS.train_batch_size], maxval=_LABEL_CLASSES - 1,
+            [FLAGS.batch_size], maxval=_LABEL_CLASSES - 1,
             dtype=tf.int32),
         _LABEL_CLASSES)
 
@@ -145,9 +143,9 @@ class BaseTest(tf.test.TestCase):
 
     predictions = spec.predictions
     self.assertAllEqual(predictions['probabilities'].shape,
-                        (FLAGS.train_batch_size, _LABEL_CLASSES))
+                        (FLAGS.batch_size, _LABEL_CLASSES))
     self.assertEqual(predictions['probabilities'].dtype, tf.float32)
-    self.assertAllEqual(predictions['classes'].shape, (FLAGS.train_batch_size,))
+    self.assertAllEqual(predictions['classes'].shape, (FLAGS.batch_size,))
     self.assertEqual(predictions['classes'].dtype, tf.int64)
 
     if mode != tf.estimator.ModeKeys.PREDICT:
