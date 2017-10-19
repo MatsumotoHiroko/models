@@ -181,8 +181,7 @@ with detection_graph.as_default():
             category_index,
             use_normalized_coordinates=True,
             line_thickness=8)
-        #plt.figure(figsize=IMAGE_SIZE)
-        #plt.imshow(image_np)
+        # Bounding box images are saved
         output_image_path = os.path.join(PATH_TO_OUTPUT_IMAGES_DIR, filename)
         print(output_image_path)
         plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
@@ -190,25 +189,10 @@ with detection_graph.as_default():
         plt.savefig(output_image_path) # ここを追加
         i = 0
         im_width, im_height = image_pil.size
+        # Bounding box images are cropped
         for box, color in items:
           ymin, xmin, ymax, xmax = box
           (xminn, xmaxx, yminn, ymaxx) = (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
-          print("######### image_np")
-          print(image_np)
-          print("########## image_np_cp")
-          print(image_np_cp)
-          print("########### xmin, ymin xmax ymax ")
-          print(xmin)
-          print(ymin)
-          print(xmax)
-          print(ymax)
-          print(ymax - ymin)
-          print(xmax - xmin)
-          print("######## yminn, xminn,  ymaxx - yminn, xmaxx - xminn")
-          print(yminn)
-          print(xminn)
-          print(ymaxx - yminn)
-          print(xmaxx - xminn)
           cropped_image = tf.image.crop_to_bounding_box(image_np_cp, int(yminn), int(xminn), 
                                        int(ymaxx - yminn), int(xmaxx - xminn))
           cropped_image_encoded = None
@@ -218,8 +202,8 @@ with detection_graph.as_default():
             cropped_image_encoded = tf.image.encode_jpeg(cropped_image) 
           crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
           print(crop_image_path)
-          print(cropped_image)
-          print(type(cropped_image))
-          file = tf.write_file(crop_image_path, cropped_image_encoded)
+          file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
+          sess = tf.Session()
+          result = sess.run(file)
           i+=1
 # In[   ]:
