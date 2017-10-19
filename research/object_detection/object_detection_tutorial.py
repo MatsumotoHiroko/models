@@ -209,12 +209,17 @@ with detection_graph.as_default():
           print(xminn)
           print(ymaxx - yminn)
           print(xmaxx - xminn)
-          cropped_image = tf.image.crop_to_bounding_box(image_np_cp, yminn, xminn, 
-                                       ymaxx - yminn, xmaxx - xminn)
+          cropped_image = tf.image.crop_to_bounding_box(image_np_cp, int(yminn), int(xminn), 
+                                       int(ymaxx - yminn), int(xmaxx - xminn))
+          cropped_image_encoded = None
+          if ext == 'png':
+            cropped_image_encoded = tf.image.encode_png(cropped_image)
+          else:
+            cropped_image_encoded = tf.image.encode_jpeg(cropped_image) 
           crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
           print(crop_image_path)
-          plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
-          plt.imshow(cropped_image)
-          plt.savefig(crop_image_path) # ここを追加
+          print(cropped_image)
+          print(type(cropped_image))
+          file = tf.write_file(crop_image_path, cropped_image_encoded)
           i+=1
 # In[   ]:
