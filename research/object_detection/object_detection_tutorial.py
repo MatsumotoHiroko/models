@@ -135,8 +135,9 @@ PATH_TO_CROP_IMAGES_DIR = 'crop_images'
 IMAGE_SIZE = (12, 8)
 exts = ['.JPG','.JPEG', '.PNG']
 
-if not os.path.isdir(PATH_TO_OUTPUT_IMAGES_DIR):
-  os.makedirs(PATH_TO_OUTPUT_IMAGES_DIR)
+if folder in [PATH_TO_OUTPUT_IMAGES_DIR, PATH_TO_CROP_IMAGES_DIR]:
+  if not os.path.isdir(folder):
+    os.makedirs(folder)
 
 # In[ ]:
 
