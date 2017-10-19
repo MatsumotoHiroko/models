@@ -3,3 +3,4 @@ ssd_mobilenet_*
 ssd_inception*
 /output_images
 /test_images
+*.swp
