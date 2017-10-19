@@ -15,6 +15,7 @@ import sys
 import tarfile
 import tensorflow as tf
 import zipfile
+import copy
 
 from collections import defaultdict
 from io import StringIO
@@ -135,7 +136,7 @@ PATH_TO_CROP_IMAGES_DIR = 'crop_images'
 IMAGE_SIZE = (12, 8)
 exts = ['.JPG','.JPEG', '.PNG']
 
-if folder in [PATH_TO_OUTPUT_IMAGES_DIR, PATH_TO_CROP_IMAGES_DIR]:
+for folder in [PATH_TO_OUTPUT_IMAGES_DIR, PATH_TO_CROP_IMAGES_DIR]:
   if not os.path.isdir(folder):
     os.makedirs(folder)
 
@@ -164,6 +165,7 @@ with detection_graph.as_default():
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
         image_np = load_image_into_numpy_array(image)
+        image_np_cp = copy.deepcopy(image_np)
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.
@@ -171,7 +173,7 @@ with detection_graph.as_default():
             [detection_boxes, detection_scores, detection_classes, num_detections],
             feed_dict={image_tensor: image_np_expanded})
         # Visualization of the results of a detection.
-        vis_util.visualize_boxes_and_labels_on_image_array(
+        items, image_pil = vis_util.visualize_boxes_and_labels_on_image_array(
             image_np,
             np.squeeze(boxes),
             np.squeeze(classes).astype(np.int32),
@@ -186,13 +188,33 @@ with detection_graph.as_default():
         plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
         plt.imshow(image_np)
         plt.savefig(output_image_path) # ここを追加
-
-        cropped_image = tf.image.crop_to_bounding_box(image_np, np.squeeze(boxes), np.squeeze(classes).astype(np.int32),
-                                                             np.squeeze(scores) - np.squeeze(classes).astype(np.int32), category_index - np.squeeze(classes).astype(np.int32))
-
-        crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, filename)
-        print(crop_image_path)
-        plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
-        plt.imshow(cropped_image)
-        plt.savefig(crop_image_path) # ここを追加
+        i = 0
+        im_width, im_height = image_pil.size
+        for box, color in items:
+          ymin, xmin, ymax, xmax = box
+          (xminn, xmaxx, yminn, ymaxx) = (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
+          print("######### image_np")
+          print(image_np)
+          print("########## image_np_cp")
+          print(image_np_cp)
+          print("########### xmin, ymin xmax ymax ")
+          print(xmin)
+          print(ymin)
+          print(xmax)
+          print(ymax)
+          print(ymax - ymin)
+          print(xmax - xmin)
+          print("######## yminn, xminn,  ymaxx - yminn, xmaxx - xminn")
+          print(yminn)
+          print(xminn)
+          print(ymaxx - yminn)
+          print(xmaxx - xminn)
+          cropped_image = tf.image.crop_to_bounding_box(image_np_cp, yminn, xminn, 
+                                       ymaxx - yminn, xmaxx - xminn)
+          crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
+          print(crop_image_path)
+          plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
+          plt.imshow(cropped_image)
+          plt.savefig(crop_image_path) # ここを追加
+          i+=1
 # In[   ]:

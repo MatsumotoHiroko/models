@@ -398,7 +398,9 @@ def visualize_boxes_and_labels_on_image_array(image,
               classes[i] % len(STANDARD_COLORS)]
 
   # Draw all boxes onto image.
-  for box, color in box_to_color_map.items():
+  #for box, color in box_to_color_map.items():
+  items = box_to_color_map.items()
+  for box, color in items:
     ymin, xmin, ymax, xmax = box
     if instance_masks is not None:
       draw_mask_on_image_array(
@@ -423,3 +425,4 @@ def visualize_boxes_and_labels_on_image_array(image,
           color=color,
           radius=line_thickness / 2,
           use_normalized_coordinates=use_normalized_coordinates)
+  return items, Image.fromarray(np.uint8(image)).convert('RGB')
