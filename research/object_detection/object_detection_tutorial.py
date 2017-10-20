@@ -203,9 +203,8 @@ with detection_graph.as_default():
         im_width, im_height = image_pil.size
         # Bounding box images are cropped
         for box, color in items:
-          print("######## box_to_display_str_map ##########")
-          print(type(box_to_display_str_map[box]))
-          print(box_to_display_str_map[box])
+          #print("######## box_to_display_str_map ##########")
+          #print(box_to_display_str_map[box])
           box_to_display_str = next(filter(None, box_to_display_str_map[box]), None)
           if box_to_display_str is None:
             continue
@@ -222,12 +221,13 @@ with detection_graph.as_default():
             else:
               cropped_image_encoded = tf.image.encode_jpeg(cropped_image) 
             crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
+            print(accuracy_str)
             print(crop_image_path)
-            #file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
+            file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
             sess = tf.Session()
-            #result = sess.run(file)
+            result = sess.run(file)
             i+=1
-          else:
-            print("######## anonter image")
-            print(target_key)
+          #else:
+          #  print("######## anonter image")
+          #  print(target_key)
 # In[   ]:
