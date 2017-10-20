@@ -28,7 +28,17 @@ import matplotlib.pyplot as plt
 
 from PIL import Image
 
-
+import argparse
+import re
+# arg
+parser = argparse.ArgumentParser()
+parser.add_argument(
+  '--target_dir',
+  type=str,
+  default='',
+  help='image files target directry.'
+)
+FLAGS, unparsed = parser.parse_known_args()
 # ## Env setup
 
 # In[8]:
@@ -127,18 +137,20 @@ def load_image_into_numpy_array(image):
 # image1.jpg
 # image2.jpg
 # If you want to test the code with your images, just add path to the images to the TEST_IMAGE_PATHS.
-PATH_TO_TEST_IMAGES_DIR = 'test_images'
+PATH_TO_TEST_IMAGES_DIR = 'test_images/{}'.format(FLAGS.target_dir)
 #TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
-PATH_TO_OUTPUT_IMAGES_DIR = 'output_images'
+PATH_TO_OUTPUT_IMAGES_DIR = 'output_images/{}'.format(FLAGS.target_dir)
 #OUTPUT_IMAGE_PATHS = [ os.path.join(PATH_TO_OUTPUT_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
-PATH_TO_CROP_IMAGES_DIR = 'crop_images'
+PATH_TO_CROP_IMAGES_DIR = 'crop_images/{}'.format(FLAGS.target_dir)
 # Size, in inches, of the output images.
 IMAGE_SIZE = (12, 8)
 exts = ['.JPG','.JPEG', '.PNG']
 
-for folder in [PATH_TO_OUTPUT_IMAGES_DIR, PATH_TO_CROP_IMAGES_DIR]:
-  if not os.path.isdir(folder):
-    os.makedirs(folder)
+if not os.path.isdir(PATH_TO_CROP_IMAGES_DIR):
+  os.makedirs(PATH_TO_CROP_IMAGES_DIR)
+#for folder in [PATH_TO_OUTPUT_IMAGES_DIR, PATH_TO_CROP_IMAGES_DIR]:
+#  if not os.path.isdir(folder):
+#    os.makedirs(folder)
 
 # In[ ]:
 
@@ -173,7 +185,7 @@ with detection_graph.as_default():
             [detection_boxes, detection_scores, detection_classes, num_detections],
             feed_dict={image_tensor: image_np_expanded})
         # Visualization of the results of a detection.
-        items, image_pil = vis_util.visualize_boxes_and_labels_on_image_array(
+        items, image_pil, box_to_display_str_map = vis_util.visualize_boxes_and_labels_on_image_array(
             image_np,
             np.squeeze(boxes),
             np.squeeze(classes).astype(np.int32),
@@ -186,24 +198,36 @@ with detection_graph.as_default():
         print(output_image_path)
         plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
         plt.imshow(image_np)
-        plt.savefig(output_image_path) # ここを追加
+        #plt.savefig(output_image_path) # ここを追加
         i = 0
         im_width, im_height = image_pil.size
         # Bounding box images are cropped
         for box, color in items:
-          ymin, xmin, ymax, xmax = box
-          (xminn, xmaxx, yminn, ymaxx) = (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
-          cropped_image = tf.image.crop_to_bounding_box(image_np_cp, int(yminn), int(xminn), 
-                                       int(ymaxx - yminn), int(xmaxx - xminn))
-          cropped_image_encoded = None
-          if ext == 'png':
-            cropped_image_encoded = tf.image.encode_png(cropped_image)
+          print("######## box_to_display_str_map ##########")
+          print(type(box_to_display_str_map[box]))
+          print(box_to_display_str_map[box])
+          box_to_display_str = next(filter(None, box_to_display_str_map[box]), None)
+          if box_to_display_str is None:
+            continue
+          target_key, accuracy_str = box_to_display_str.split(':')
+          accuracy_str = re.sub('\s|%', '', accuracy_str)
+          if target_key == FLAGS.target_dir:
+            ymin, xmin, ymax, xmax = box
+            (xminn, xmaxx, yminn, ymaxx) = (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
+            cropped_image = tf.image.crop_to_bounding_box(image_np_cp, int(yminn), int(xminn), 
+                                         int(ymaxx - yminn), int(xmaxx - xminn))
+            cropped_image_encoded = None
+            if ext == 'png':
+              cropped_image_encoded = tf.image.encode_png(cropped_image)
+            else:
+              cropped_image_encoded = tf.image.encode_jpeg(cropped_image) 
+            crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
+            print(crop_image_path)
+            #file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
+            sess = tf.Session()
+            #result = sess.run(file)
+            i+=1
           else:
-            cropped_image_encoded = tf.image.encode_jpeg(cropped_image) 
-          crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
-          print(crop_image_path)
-          file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
-          sess = tf.Session()
-          result = sess.run(file)
-          i+=1
+            print("######## anonter image")
+            print(target_key)
 # In[   ]:

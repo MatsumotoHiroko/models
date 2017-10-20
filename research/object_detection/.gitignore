@@ -5,3 +5,4 @@ ssd_inception*
 /test_images
 /crop_images
 *.swp
+*.log

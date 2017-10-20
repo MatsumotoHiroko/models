@@ -425,4 +425,4 @@ def visualize_boxes_and_labels_on_image_array(image,
           color=color,
           radius=line_thickness / 2,
           use_normalized_coordinates=use_normalized_coordinates)
-  return items, Image.fromarray(np.uint8(image)).convert('RGB')
+  return items, Image.fromarray(np.uint8(image)).convert('RGB'), box_to_display_str_map
