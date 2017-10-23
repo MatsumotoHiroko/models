@@ -176,47 +176,43 @@ with detection_graph.as_default():
     #for image_path in TEST_IMAGE_PATHS:
     for dirpath, dirnames, filenames in os.walk(PATH_TO_TEST_IMAGES_DIR):
       for filename in filenames:
-        (fn,ext) = os.path.splitext(filename)
-        if ext.upper() not in config.exts:        
-          continue
-        image_path = os.path.join(dirpath, filename)
-        print(image_path)
-        image = Image.open(image_path)
-        # the array based representation of the image will be used later in order to prepare the
-        # result image with boxes and labels on it.
-        image_np = None
-        try:
+        try:    
+          (fn,ext) = os.path.splitext(filename)
+          if ext.upper() not in config.exts:        
+            continue
+          image_path = os.path.join(dirpath, filename)
+          print(image_path)
+          image = Image.open(image_path)
+          # the array based representation of the image will be used later in order to prepare the
+          # result image with boxes and labels on it.
+          image_np = None
           image_np = load_image_into_numpy_array(image)
-        except:
-          print("Error load_image_into_numpy_array")
-          continue
-        image_np_cp = copy.deepcopy(image_np)
-        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-        image_np_expanded = np.expand_dims(image_np, axis=0)
-        # Actual detection.
-        (boxes, scores, classes, num) = sess.run(
-            [detection_boxes, detection_scores, detection_classes, num_detections],
-            feed_dict={image_tensor: image_np_expanded})
-        # Visualization of the results of a detection.
-        items, image_pil, box_to_display_str_map = vis_util.visualize_boxes_and_labels_on_image_array(
-            image_np,
-            np.squeeze(boxes),
-            np.squeeze(classes).astype(np.int32),
-            np.squeeze(scores),
-            category_index,
-            use_normalized_coordinates=True,
-            line_thickness=8)
-        # Bounding box images are saved
-        output_image_path = os.path.join(PATH_TO_OUTPUT_IMAGES_DIR, filename)
-        print(output_image_path)
-        plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
-        plt.imshow(image_np)
-        #plt.savefig(output_image_path) # ここを追加
-        i = 0
-        im_width, im_height = image_pil.size
-        # Bounding box images are cropped
-        for box, color in items:
-          try:
+          image_np_cp = copy.deepcopy(image_np)
+          # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+          image_np_expanded = np.expand_dims(image_np, axis=0)
+          # Actual detection.
+          (boxes, scores, classes, num) = sess.run(
+              [detection_boxes, detection_scores, detection_classes, num_detections],
+              feed_dict={image_tensor: image_np_expanded})
+          # Visualization of the results of a detection.
+          items, image_pil, box_to_display_str_map = vis_util.visualize_boxes_and_labels_on_image_array(
+              image_np,
+              np.squeeze(boxes),
+              np.squeeze(classes).astype(np.int32),
+              np.squeeze(scores),
+              category_index,
+              use_normalized_coordinates=True,
+              line_thickness=8)
+          # Bounding box images are saved
+          output_image_path = os.path.join(PATH_TO_OUTPUT_IMAGES_DIR, filename)
+          print(output_image_path)
+          plt.figure(figsize=IMAGE_SIZE, dpi=300) # dpiいじったら文字が読めるようになる
+          plt.imshow(image_np)
+          #plt.savefig(output_image_path) # ここを追加
+          i = 0
+          im_width, im_height = image_pil.size
+          # Bounding box images are cropped
+          for box, color in items:
             box_to_display_str = next(filter(None, box_to_display_str_map[box]), None)
             print(box_to_display_str)
             if box_to_display_str is None:
@@ -245,7 +241,6 @@ with detection_graph.as_default():
             #else:
             #  print("######## anonter image")
             #  print(target_key)
-          except:
-            print("!!! Exception !!!!")
-            print(sys.exc_info())
+        except:
+          print("!!! Exception !!!! {}:{}".format(filename, sys.exc_info()))
 # In[   ]:
