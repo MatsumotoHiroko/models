@@ -16,6 +16,7 @@ import tarfile
 import tensorflow as tf
 import zipfile
 import copy
+import config
 
 from collections import defaultdict
 from io import StringIO
@@ -138,14 +139,13 @@ def load_image_into_numpy_array(image):
 # image1.jpg
 # image2.jpg
 # If you want to test the code with your images, just add path to the images to the TEST_IMAGE_PATHS.
-PATH_TO_TEST_IMAGES_DIR = 'test_images/{}'.format(FLAGS.target_dir)
+PATH_TO_TEST_IMAGES_DIR = '{}/{}'.format(config.TEST_IMAGES_DIR, FLAGS.target_dir)
 #TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
-PATH_TO_OUTPUT_IMAGES_DIR = 'output_images/{}'.format(FLAGS.target_dir)
+PATH_TO_OUTPUT_IMAGES_DIR = '{}/{}'.format(config.OUTPUT_IMAGES_DIR, FLAGS.target_dir)
 #OUTPUT_IMAGE_PATHS = [ os.path.join(PATH_TO_OUTPUT_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
-PATH_TO_CROP_IMAGES_DIR = 'crop_images/{}'.format(FLAGS.target_dir)
+PATH_TO_CROP_IMAGES_DIR = '{}/{}'.format(config.CROP_IMAGES_DIR, FLAGS.target_dir)
 # Size, in inches, of the output images.
 IMAGE_SIZE = (12, 8)
-exts = ['.JPG','.JPEG', '.PNG']
 
 if not os.path.isdir(PATH_TO_CROP_IMAGES_DIR):
   os.makedirs(PATH_TO_CROP_IMAGES_DIR)
@@ -177,7 +177,7 @@ with detection_graph.as_default():
     for dirpath, dirnames, filenames in os.walk(PATH_TO_TEST_IMAGES_DIR):
       for filename in filenames:
         (fn,ext) = os.path.splitext(filename)
-        if ext.upper() not in exts:        
+        if ext.upper() not in config.exts:        
           continue
         image_path = os.path.join(dirpath, filename)
         print(image_path)
