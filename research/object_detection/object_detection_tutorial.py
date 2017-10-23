@@ -31,6 +31,8 @@ from PIL import Image
 
 import argparse
 import re
+
+exts = config.exts
 # arg
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -178,7 +180,7 @@ with detection_graph.as_default():
       for filename in filenames:
         try:    
           (fn,ext) = os.path.splitext(filename)
-          if ext.upper() not in config.exts:        
+          if ext.upper() not in exts:        
             continue
           image_path = os.path.join(dirpath, filename)
           print(image_path)
