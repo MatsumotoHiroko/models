@@ -166,6 +166,7 @@ config = tf.ConfigProto(
 
 with detection_graph.as_default():
   with tf.Session(graph=detection_graph, config=config) as sess:
+    index = 0
     # Definite input and output Tensors for detection_graph
     image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
     # Each box represents a part of the image where a particular object was detected.
@@ -240,9 +241,11 @@ with detection_graph.as_default():
               sess = tf.Session(config=config)
               result = sess.run(file)
               i+=1
+              index += 1
             #else:
             #  print("######## anonter image")
             #  print(target_key)
         except:
           print("!!! Exception !!!! {}:{}".format(filename, sys.exc_info()))
+    print('cropped {}: {} files'.format(FLAGS.target_dir, index))
 # In[   ]:
