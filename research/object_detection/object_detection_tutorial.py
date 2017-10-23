@@ -82,6 +82,7 @@ PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
 
 NUM_CLASSES = 90
 
+pass_accuracy_rate = 90
 
 # ## Download Model
 
@@ -154,8 +155,15 @@ if not os.path.isdir(PATH_TO_CROP_IMAGES_DIR):
 
 # In[ ]:
 
+# メモリ確保
+config = tf.ConfigProto(
+  gpu_options=tf.GPUOptions(
+    allow_growth=True # True->必要になったら確保, False->全部
+  )
+)
+
 with detection_graph.as_default():
-  with tf.Session(graph=detection_graph) as sess:
+  with tf.Session(graph=detection_graph, config=config) as sess:
     # Definite input and output Tensors for detection_graph
     image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
     # Each box represents a part of the image where a particular object was detected.
@@ -176,7 +184,12 @@ with detection_graph.as_default():
         image = Image.open(image_path)
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
-        image_np = load_image_into_numpy_array(image)
+        image_np = None
+        try:
+          image_np = load_image_into_numpy_array(image)
+        except:
+          print("Error load_image_into_numpy_array")
+          continue
         image_np_cp = copy.deepcopy(image_np)
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
@@ -203,31 +216,36 @@ with detection_graph.as_default():
         im_width, im_height = image_pil.size
         # Bounding box images are cropped
         for box, color in items:
-          #print("######## box_to_display_str_map ##########")
-          #print(box_to_display_str_map[box])
-          box_to_display_str = next(filter(None, box_to_display_str_map[box]), None)
-          if box_to_display_str is None:
-            continue
-          target_key, accuracy_str = box_to_display_str.split(':')
-          accuracy_str = re.sub('\s|%', '', accuracy_str)
-          if target_key == FLAGS.target_dir:
-            ymin, xmin, ymax, xmax = box
-            (xminn, xmaxx, yminn, ymaxx) = (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
-            cropped_image = tf.image.crop_to_bounding_box(image_np_cp, int(yminn), int(xminn), 
-                                         int(ymaxx - yminn), int(xmaxx - xminn))
-            cropped_image_encoded = None
-            if ext == 'png':
-              cropped_image_encoded = tf.image.encode_png(cropped_image)
-            else:
-              cropped_image_encoded = tf.image.encode_jpeg(cropped_image) 
-            crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
-            print(accuracy_str)
-            print(crop_image_path)
-            file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
-            sess = tf.Session()
-            result = sess.run(file)
-            i+=1
-          #else:
-          #  print("######## anonter image")
-          #  print(target_key)
+          try:
+            box_to_display_str = next(filter(None, box_to_display_str_map[box]), None)
+            print(box_to_display_str)
+            if box_to_display_str is None:
+              continue
+            target_key, accuracy_str = box_to_display_str.split(':')
+            accuracy = int(re.sub('\s|%', '', accuracy_str))
+            print(target_key)
+            print(FLAGS.target_dir)
+            if target_key == FLAGS.target_dir and accuracy >= pass_accuracy_rate:
+              ymin, xmin, ymax, xmax = box
+              (xminn, xmaxx, yminn, ymaxx) = (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
+              cropped_image = tf.image.crop_to_bounding_box(image_np_cp, int(yminn), int(xminn), 
+                                           int(ymaxx - yminn), int(xmaxx - xminn))
+              cropped_image_encoded = None
+              if ext == 'png':
+                cropped_image_encoded = tf.image.encode_png(cropped_image)
+              else:
+                cropped_image_encoded = tf.image.encode_jpeg(cropped_image) 
+              crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
+              print(accuracy_str)
+              print(crop_image_path)
+              file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
+              sess = tf.Session(config=config)
+              result = sess.run(file)
+              i+=1
+            #else:
+            #  print("######## anonter image")
+            #  print(target_key)
+          except:
+            print("!!! Exception !!!!")
+            print(sys.exc_info())
 # In[   ]:

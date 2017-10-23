@@ -78,7 +78,7 @@ def freeze_graph_with_def_protos(
     else:
       logging.info('Graph Rewriter optimizations disabled')
       graph_options = tf.GraphOptions()
-    config = tf.ConfigProto(graph_options=graph_options)
+    config = tf.ConfigProto(graph_options=graph_options, gpu_options=tf.GPUOptions(allow_growth=True))
     with session.Session(config=config) as sess:
       if input_saver_def:
         saver = saver_lib.Saver(saver_def=input_saver_def)
