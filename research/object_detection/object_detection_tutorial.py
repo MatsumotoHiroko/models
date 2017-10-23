@@ -82,7 +82,7 @@ PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
 
 NUM_CLASSES = 90
 
-pass_accuracy_rate = 90
+pass_accuracy_rate = 60
 
 # ## Download Model
 
