@@ -4,5 +4,6 @@ ssd_inception*
 /output_images
 /test_images
 /crop_images
+/convert_images
 *.swp
 *.log
