@@ -74,6 +74,7 @@ from utils import visualization_utils as vis_util
 
 # What model to download.
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
+MODEL_PATH = '/datadrive/ssd/'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
 DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
 
@@ -92,7 +93,7 @@ pass_accuracy_rate = 60
 # In[ ]:
 
 opener = urllib.request.URLopener()
-opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
+opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_PATH + MODEL_FILE)
 tar_file = tarfile.open(MODEL_FILE)
 for file in tar_file.getmembers():
   file_name = os.path.basename(file.name)
@@ -179,7 +180,7 @@ with detection_graph.as_default():
     #for image_path in TEST_IMAGE_PATHS:
     for dirpath, dirnames, filenames in os.walk(PATH_TO_TEST_IMAGES_DIR):
       for filename in filenames:
-        try:    
+        #try:    
           (fn,ext) = os.path.splitext(filename)
           if ext.upper() not in exts:        
             continue
@@ -237,15 +238,14 @@ with detection_graph.as_default():
               crop_image_path = os.path.join(PATH_TO_CROP_IMAGES_DIR, '{}_{}{}'.format(fn, i, ext))
               print(accuracy_str)
               print(crop_image_path)
-              file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
-              sess = tf.Session(config=config)
-              result = sess.run(file)
+              #file = tf.write_file(tf.constant(crop_image_path), cropped_image_encoded)
+              result = sess.run(tf.write_file(tf.constant(crop_image_path), cropped_image_encoded))
               i+=1
               index += 1
             #else:
             #  print("######## anonter image")
             #  print(target_key)
-        except:
-          print("!!! Exception !!!! {}:{}".format(filename, sys.exc_info()))
+        #except:
+        #  print("!!! Exception !!!! {}:{}".format(filename, sys.exc_info()))
     print('cropped {}: {} files'.format(FLAGS.target_dir, index))
 # In[   ]:
