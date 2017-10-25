@@ -45,6 +45,7 @@ import cifar10
 
 import config
 import grad_cam
+import cv2
 #from tensorflow.models.image.cifar10 import cifar10
 
 FLAGS = tf.app.flags.FLAGS
@@ -64,7 +65,9 @@ tf.app.flags.DEFINE_boolean('log_device_placement', False,
 tf.app.flags.DEFINE_integer('log_frequency', 10,
                             """How often to log results to the console.""")
 
-
+# grad_cam
+tf.app.flags.DEFINE_string('cam_dir', './grad_cam',
+                           """grad cam folder""")
 def train():
   """Train CIFAR-10 for a number of steps."""
   # CIFAR10をあるステップ数学習する
@@ -87,7 +90,8 @@ def train():
     # 推論モデル（inference model）からロジットの予測を計算するグラフを作る
     ## DROPOUT
     #logits = cifar10.inference(images, keep_drop_prob=0.5)
-    logits = cifar10.inference(images)
+    #logits = cifar10.inference(images)
+    logits, cam_conv1, cam_conv2, cam_pool1, cam_pool2 = cifar10.inference(images)
 
     # Calculate loss.
     # 損失を計算
@@ -124,6 +128,15 @@ def train():
           print(format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch))
 
+          ### grad_cam
+          if self._step % 100 == 0:
+            img = batch_x[0] # take iBatch=0. Same for gcam internally
+            cv2.imwrite(os.path.join(FLAGS.cam_dir,"%d_origi.png"%step),   img)
+            cv2.imwrite(os.path.join(FLAGS.cam_dir,"%d_conv1.png"%step),grad_cam.gradCamGenImage(img,cam_conv1))
+            cv2.imwrite(os.path.join(FLAGS.cam_dir,"%d_conv2.png"%step),grad_cam.gradCamGenImage(img,cam_conv2))
+            cv2.imwrite(os.path.join(FLAGS.cam_dir,"%d_pool1.png"%step),grad_cam.gradCamGenImage(img,cam_pool1))
+            cv2.imwrite(os.path.join(FLAGS.cam_dir,"%d_pool2.png"%step),grad_cam.gradCamGenImage(img,cam_pool2))
+
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.train_dir,
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
@@ -143,7 +156,8 @@ def main(argv=None):  # pylint: disable=unused-argument
   #cifar10.maybe_download_and_extract()
   if tf.gfile.Exists(FLAGS.train_dir):
     tf.gfile.DeleteRecursively(FLAGS.train_dir)
-  tf.gfile.MakeDirs(FLAGS.train_dir)
+  if tf.gfile.Exists(FLAGS.cam_dir): ## grad_cam
+    tf.gfile.MakeDirs(FLAGS.cam_dir) ## grad_cam
   train()
 
 
