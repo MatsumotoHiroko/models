@@ -94,7 +94,7 @@ pass_accuracy_rate = 60
 
 opener = urllib.request.URLopener()
 opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_PATH + MODEL_FILE)
-tar_file = tarfile.open(MODEL_FILE)
+tar_file = tarfile.open(MODEL_PATH + MODEL_FILE)
 for file in tar_file.getmembers():
   file_name = os.path.basename(file.name)
   if 'frozen_inference_graph.pb' in file_name:
@@ -130,6 +130,7 @@ category_index = label_map_util.create_category_index(categories)
 
 def load_image_into_numpy_array(image):
   (im_width, im_height) = image.size
+  print('[image size]{} / {} : {}'.format(im_width, im_height, image.getdata()))
   return np.array(image.getdata()).reshape(
       (im_height, im_width, 3)).astype(np.uint8)
 
@@ -186,7 +187,8 @@ with detection_graph.as_default():
             continue
           image_path = os.path.join(dirpath, filename)
           print(image_path)
-          image = Image.open(image_path)
+          # https://stackoverflow.com/questions/45400346/valueerror-cannot-reshape-array-of-size-357604-into-shape-299-299-3
+          image = Image.open(image_path).convert('RGB')
           # the array based representation of the image will be used later in order to prepare the
           # result image with boxes and labels on it.
           image_np = None
