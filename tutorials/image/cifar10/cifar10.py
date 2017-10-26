@@ -316,7 +316,34 @@ def inference(images):
     softmax_linear = tf.add(tf.matmul(local4, weights), biases, name=scope.name)
     _activation_summary(softmax_linear)
 
-  return softmax_linear
+  ## grad-cam
+  #with tf.variable_scope("fc1"):
+  #  # fc1
+  #  sb,sh,sw,sf = [int(a) for a in local4.get_shape()]
+  #  print(sh,sb,sf)
+  #  fc1 = tf.reshape(local4,[FLAGS.batch_size, sh*sw*sf])
+  #  fc1_w, fc1_b = self._fc_variable([sh*sw*sf, 32])
+  #  fc1 = tf.matmul(fc1, fc1_w) + fc1_b
+  #  fc1 = tf.maximum(x*0.1,x)
+  #  fc1 = self.leakyReLU(h)
+  with tf.variable_scope('cam_conv1-3 cam_pool1-3') as scope:
+    #############################
+    ### grad-cam definition https://github.com/ysasaki6023/imageCounting/blob/v2.0/gradCam.py
+    iBatch = 0
+    answer = tf.argmax(self.y,axis=1)[iBatch]
+    cam_conv1 = grad_cam.gradCam(conv1, local4, fc_target_idx=answer, iBatch=iBatch)
+    cam_conv2 = grad_cam.gradCam(conv2, local4, fc_target_idx=answer, iBatch=iBatch)
+
+    cam_pool1 = grad_cam.gradCam(pool1, local4, fc_target_idx=answer, iBatch=iBatch)
+    cam_pool2 = grad_cam.gradCam(pool2, local4, fc_target_idx=answer, iBatch=iBatch)
+    #cam_conv1 = grad_cam.gradCam(conv1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    #cam_conv2 = grad_cam.gradCam(conv2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+
+    #cam_pool1 = grad_cam.gradCam(pool1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    #cam_pool2 = grad_cam.gradCam(pool2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+  #return softmax_linear
+  # grad_cam
+  return softmax_linear, cam_conv1, cam_conv2, cam_pool1, cam_pool2
 
 
 def loss(logits, labels):
