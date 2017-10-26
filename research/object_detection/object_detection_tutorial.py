@@ -181,7 +181,7 @@ with detection_graph.as_default():
     #for image_path in TEST_IMAGE_PATHS:
     for dirpath, dirnames, filenames in os.walk(PATH_TO_TEST_IMAGES_DIR):
       for filename in filenames:
-        #try:    
+        try:    
           (fn,ext) = os.path.splitext(filename)
           if ext.upper() not in exts:        
             continue
@@ -247,7 +247,7 @@ with detection_graph.as_default():
             #else:
             #  print("######## anonter image")
             #  print(target_key)
-        #except:
-        #  print("!!! Exception !!!! {}:{}".format(filename, sys.exc_info()))
+        except:
+          print("!!! Exception !!!! {}:{}".format(filename, sys.exc_info()))
     print('cropped {}: {} files'.format(FLAGS.target_dir, index))
 # In[   ]:
