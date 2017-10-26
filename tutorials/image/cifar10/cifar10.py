@@ -45,7 +45,7 @@ import tensorflow as tf
 
 import cifar10_input
 
-import grad_cam
+import grad_cam as gdc
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -290,13 +290,13 @@ def inference(images):
     ### grad-cam definition https://github.com/ysasaki6023/imageCounting/blob/v2.0/gradCam.py
     iBatch = 0
     answer = tf.argmax(self.y,axis=1)[iBatch]
-    self.cam_conv1 = self.gradCam(h_conv1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
-    self.cam_conv2 = self.gradCam(h_conv2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
-    self.cam_conv3 = self.gradCam(h_conv3, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_conv1 = gdc.gradCam(h_conv1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_conv2 = gdc.gradCam(h_conv2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_conv3 = gdc.gradCam(h_conv3, h_fc2, fc_target_idx=answer, iBatch=iBatch)
 
-    self.cam_pool1 = self.gradCam(h_pool1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
-    self.cam_pool2 = self.gradCam(h_pool2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
-    self.cam_pool3 = self.gradCam(h_pool3, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_pool1 = gdc.gradCam(h_pool1, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_pool2 = gdc.gradCam(h_pool2, h_fc2, fc_target_idx=answer, iBatch=iBatch)
+    self.cam_pool3 = gdc.gradCam(h_pool3, h_fc2, fc_target_idx=answer, iBatch=iBatch)
 
 
   # linear layer(WX + b),
