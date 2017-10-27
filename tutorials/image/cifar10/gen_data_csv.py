@@ -17,7 +17,7 @@ if __name__ == '__main__':
   print("path,value")
   for dirpath, dirnames, filenames in os.walk(outdir):
     for filename in filenames:
-      n = config.label_names[re.sub(r'[0-9]{1,3}\.(png)$', "", filename)]
+      n = config.label_names[re.sub(r'[0-9]{1,3}.*\.(png)$', "", filename)]
       (fn,ext) = os.path.splitext(filename)
       if ext.upper() in exts:
         img_path = os.path.join(dirpath, filename)
