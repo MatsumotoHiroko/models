@@ -43,6 +43,7 @@ import tensorflow as tf
 
 import cifar10
 
+import tensorlayer as tl
 import config
 
 cifar10.NUM_CLASSES = config.NUM_CLASSES # add
@@ -68,7 +69,11 @@ parser = cifar10.parser
 parser.add_argument('--train_dir', type=str, default='/tmp/cifar10_train',
                     help='Directory where to write event logs and checkpoint.')
 
-parser.add_argument('--max_steps', type=int, default=1000000,
+#parser.add_argument('--max_steps', type=int, default=1000000,
+
+#parser.add_argument('--max_steps', type=int, default=50000,
+
+parser.add_argument('--max_steps', type=int, default=200,
                     help='Number of batches to run.')
 
 parser.add_argument('--log_device_placement', type=bool, default=False,
@@ -77,7 +82,9 @@ parser.add_argument('--log_device_placement', type=bool, default=False,
 parser.add_argument('--log_frequency', type=int, default=10,
                     help='How often to log results to the console.')
 
-
+parser.add_argument('--output_dir', type=str, default='output_dir',
+                    help='Directory where to save ckpt and npz.')
+last_model=''
 def train():
   """Train CIFAR-10 for a number of steps."""
   # CIFAR10をあるステップ数学習する
@@ -136,7 +143,6 @@ def train():
                         'sec/batch)')
           print(format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch))
-
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.train_dir,
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
@@ -151,7 +157,17 @@ def train():
       while not mon_sess.should_stop():
         mon_sess.run(train_op)
 
-
+    with tf.Session() as sess:
+      sess.run(tf.global_variables_initializer())
+      ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
+      if ckpt: # checkpointがある場合
+        target_list = []
+        for v in tf.global_variables():
+          if v.shape != ():
+            target_list.append(v.name)
+        last_model = ckpt.model_checkpoint_path # 最後に保存したmodelへのパス
+        tl.files.load_ckpt(sess=sess, mode_name=last_model, printable=True)
+        tl.files.save_npz(target_list, name='{}/cifar10.npz'.format(FLAGS.output_dir), sess=sess)
 def main(argv=None):  # pylint: disable=unused-argument
   #cifar10.maybe_download_and_extract()
   if tf.gfile.Exists(FLAGS.train_dir):
@@ -163,3 +179,5 @@ def main(argv=None):  # pylint: disable=unused-argument
 if __name__ == '__main__':
   FLAGS = parser.parse_args()
   tf.app.run()
+
+

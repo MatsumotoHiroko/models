@@ -3,6 +3,7 @@
 /cifar10_train
 /cifar10_eval
 /data
+/output_dir
 *.swp
 /protos
 ssd_mobilenet*
